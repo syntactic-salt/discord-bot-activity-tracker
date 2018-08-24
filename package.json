@@ -4,18 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint \"**/**.js\"",
-    "start": "node index.js",
+    "lint": "eslint \"app/**/**.js\"",
+    "start": "node ./app/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "11.4.0"
+    "discord.js": "11.4.2",
+    "mysql": "2.16.0"
   },
   "devDependencies": {
-    "eslint": "5.3.0",
-    "eslint-config-airbnb-base": "13.0.0",
-    "eslint-plugin-import": "2.13.0"
+    "eslint": "5.4.0",
+    "eslint-config-airbnb-base": "13.1.0",
+    "eslint-plugin-import": "2.14.0"
   }
 }
