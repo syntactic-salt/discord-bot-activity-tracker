@@ -19,7 +19,7 @@ class Channel extends Resource {
 
                     this.databaseId = resultId;
 
-                    if (this.name !== resultName) {
+                    if (this.name === resultName) {
                         resolve(this);
                     } else {
                         this.updateChannelsTable().then(() => resolve(this)).catch(error => reject(error));
