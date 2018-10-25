@@ -1,11 +1,10 @@
 class Resource {
-    constructor(discordId, databaseId = null) {
-        this.discordId = discordId;
-        this.databaseId = databaseId;
+    constructor(id) {
+        this.id = id;
     }
 
-    getDatabaseId() {
-        return this.databaseId;
+    getId() {
+        return this.id;
     }
 }
 

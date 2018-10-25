@@ -5,27 +5,22 @@ const Resource = require('./resource.class');
 const MySQLCreateConnection = MySQL.createConnection;
 
 class Message extends Resource {
-    constructor(discordId, channelId, memberId, databaseId = null) {
-        super(discordId, databaseId);
+    constructor(id, channelId, memberId) {
+        super(id);
         this.channelId = channelId;
         this.memberId = memberId;
     }
 
-    sync() {
-        return this.insertMessagesTable();
-    }
-
-    insertMessagesTable() {
+    create() {
         return new Promise((resolve, reject) => {
             const connection = new MySQLCreateConnection(database);
-            connection.query('INSERT INTO messages SET channel_id = ?, discord_id = ?, member_id = ?',
-                [this.channelId, this.discordId, this.memberId],
+            connection.query('INSERT INTO messages SET channel_id = ?, id = ?, member_id = ?, date = NOW()',
+                [this.channelId, this.id, this.memberId],
                 (error, result) => {
                     if (error) {
                         reject(error);
                     } else {
-                        this.databaseId = result.insertId;
-                        resolve(this);
+                        resolve(result);
                     }
 
                     connection.destroy();

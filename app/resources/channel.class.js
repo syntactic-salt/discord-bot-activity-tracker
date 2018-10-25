@@ -5,40 +5,39 @@ const Resource = require('./resource.class');
 const MySQLCreateConnection = MySQL.createConnection;
 
 class Channel extends Resource {
-    constructor(discordId, channelName, guildId, databaseId = null) {
-        super(discordId, databaseId);
+    constructor(id, channelName, guildId) {
+        super(id);
         this.guildId = guildId;
         this.name = channelName;
     }
 
     sync() {
         return new Promise((resolve, reject) => {
-            this.selectChannelsTable().then((results) => {
+            this.fetch().then((results) => {
                 if (results.length) {
-                    const { id: resultId, name: resultName } = results[0];
+                    const { name } = results[0];
 
-                    this.databaseId = resultId;
-
-                    if (this.name === resultName) {
+                    if (this.name === name) {
                         resolve(this);
                     } else {
-                        this.updateChannelsTable().then(() => resolve(this)).catch(error => reject(error));
+                        this.update().then(() => resolve(this)).catch(error => reject(error));
                     }
                 } else {
-                    this.insertChannelsTable().then((result) => {
-                        this.databaseId = result.insertId;
-                        resolve(this);
-                    }).catch(error => reject(error));
+                    this.create().then(() => resolve(this)).catch(error => reject(error));
                 }
             }).catch(error => reject(error));
         });
     }
 
-    selectChannelsTable() {
+    equalTo(channel) {
+        return channel.id === this.id && channel.name === this.name && channel.guildId === this.guildId;
+    }
+
+    fetch() {
         return new Promise((resolve, reject) => {
             const connection = new MySQLCreateConnection(database);
-            connection.query('SELECT id, name FROM channels WHERE discord_id = ?',
-                [this.discordId],
+            connection.query('SELECT name FROM channels WHERE id = ?',
+                [this.id],
                 (error, results) => {
                     if (error) {
                         reject(error);
@@ -51,11 +50,11 @@ class Channel extends Resource {
         });
     }
 
-    insertChannelsTable() {
+    create() {
         return new Promise((resolve, reject) => {
             const connection = new MySQLCreateConnection(database);
-            connection.query('INSERT INTO channels SET name = ?, discord_id = ?, guild_id = ?',
-                [this.name, this.discordId, this.guildId],
+            connection.query('INSERT INTO channels SET id = ?, name = ?, guild_id = ?',
+                [this.id, this.name, this.guildId],
                 (error, result) => {
                     if (error) {
                         reject(error);
@@ -68,11 +67,28 @@ class Channel extends Resource {
         });
     }
 
-    updateChannelsTable() {
+    update() {
         return new Promise((resolve, reject) => {
             const connection = new MySQLCreateConnection(database);
             connection.query('UPDATE channels SET name = ? WHERE id = ?',
-                [this.name, this.databaseId],
+                [this.name, this.id],
+                (error, result) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(result);
+                    }
+
+                    connection.destroy();
+                });
+        });
+    }
+
+    remove() {
+        return new Promise((resolve, reject) => {
+            const connection = new MySQLCreateConnection(database);
+            connection.query('DELETE FROM channels WHERE id = ?',
+                [this.id],
                 (error, result) => {
                     if (error) {
                         reject(error);

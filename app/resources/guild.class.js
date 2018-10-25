@@ -5,54 +5,51 @@ const Resource = require('./resource.class');
 const MySQLCreateConnection = MySQL.createConnection;
 
 class Guild extends Resource {
-    constructor(discordId, guildName, databaseId = null) {
-        super(discordId, databaseId);
+    constructor(id, guildName) {
+        super(id);
         this.name = guildName;
     }
 
     sync() {
         return new Promise((resolve, reject) => {
-            this.selectGuildsTable().then((results) => {
+            this.fetch().then((results) => {
                 if (results.length) {
-                    const { id: resultId, name: resultName } = results[0];
+                    const { name } = results[0];
 
-                    this.databaseId = resultId;
-
-                    if (this.name === resultName) {
+                    if (this.name === name) {
                         resolve(this);
                     } else {
-                        this.updateGuildsTable().then(() => resolve(this)).catch(error => reject(error));
+                        this.update().then(() => resolve(this)).catch(error => reject(error));
                     }
                 } else {
-                    this.insertGuildsTable().then((result) => {
-                        this.databaseId = result.insertId;
-                        resolve(this);
-                    }).catch(error => reject(error));
+                    this.create().then(() => resolve(this)).catch(error => reject(error));
                 }
             }).catch(error => reject(error));
         });
     }
 
-    selectGuildsTable() {
+    fetch() {
         return new Promise((resolve, reject) => {
             const connection = new MySQLCreateConnection(database);
-            connection.query('SELECT id, name FROM guilds WHERE discord_id = ?', [this.discordId], (error, results) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(results);
-                }
+            connection.query('SELECT name FROM guilds WHERE id = ?',
+                [this.id],
+                (error, results) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(results);
+                    }
 
-                connection.destroy();
-            });
+                    connection.destroy();
+                });
         });
     }
 
-    insertGuildsTable() {
+    create() {
         return new Promise((resolve, reject) => {
             const connection = new MySQLCreateConnection(database);
-            connection.query('INSERT INTO guilds SET name = ?, discord_id = ?',
-                [this.name, this.discordId],
+            connection.query('INSERT INTO guilds SET name = ?, id = ?',
+                [this.name, this.id],
                 (error, result) => {
                     if (error) {
                         reject(error);
@@ -65,11 +62,11 @@ class Guild extends Resource {
         });
     }
 
-    updateGuildsTable() {
+    update() {
         return new Promise((resolve, reject) => {
             const connection = new MySQLCreateConnection(database);
             connection.query('UPDATE guilds SET name = ? WHERE id = ?',
-                [this.name, this.databaseId],
+                [this.name, this.id],
                 (error, result) => {
                     if (error) {
                         reject(error);

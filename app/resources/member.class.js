@@ -5,50 +5,39 @@ const Resource = require('./resource.class');
 const MySQLCreateConnection = MySQL.createConnection;
 
 class Member extends Resource {
-    constructor(discordId, memberName, discordDiscriminator, guildId, databaseId = null) {
-        super(discordId, databaseId);
+    constructor(id, memberName, guildId) {
+        super(id);
         this.guildId = guildId;
-        this.username = memberName;
-        this.discriminator = discordDiscriminator;
+        this.name = memberName;
+    }
+
+    equalTo(member) {
+        return member.id === this.id && member.name === this.name && member.guildId === this.guildId;
     }
 
     sync() {
         return new Promise((resolve, reject) => {
-            this.selectMembersTable().then((results) => {
+            this.fetch().then((results) => {
                 if (results.length) {
-                    const { id: resultId, username: resultName } = results[0];
+                    const { name } = results[0];
 
-                    this.databaseId = resultId;
-
-                    if (resultName !== this.username) {
-                        return this.updateMembersTable().catch(error => reject(error));
+                    if (name === this.name) {
+                        resolve(this);
+                    } else {
+                        this.update().then(() => resolve(this)).catch(error => reject(error));
                     }
-
-                    return results;
+                } else {
+                    this.create().then(() => resolve(this)).catch(error => reject(error));
                 }
-
-                return this.insertMembersTable().then((result) => {
-                    this.databaseId = result.insertId;
-                }).catch(error => reject(error));
-            }).then(() => {
-                this.selectMembersToGuildsTable().then((results) => {
-                    if (!results.length) {
-                        this.insertMembersToGuildsTable().then(() => {
-                            resolve(this);
-                        }).catch(error => reject(error));
-                    }
-
-                    resolve(this);
-                }).catch(error => reject(error));
             }).catch(error => reject(error));
         });
     }
 
-    selectMembersTable() {
+    fetch() {
         return new Promise((resolve, reject) => {
             const connection = new MySQLCreateConnection(database);
-            connection.query('SELECT id, username FROM members WHERE discord_id = ?',
-                [this.discordId],
+            connection.query('SELECT name FROM members WHERE id = ? AND guild_id = ?',
+                [this.id, this.guildId],
                 (error, results) => {
                     if (error) {
                         reject(error);
@@ -61,11 +50,11 @@ class Member extends Resource {
         });
     }
 
-    insertMembersTable() {
+    create() {
         return new Promise((resolve, reject) => {
             const connection = new MySQLCreateConnection(database);
-            connection.query('INSERT INTO members SET username = ?, discriminator = ?, discord_id = ?',
-                [this.username, this.discriminator, this.discordId],
+            connection.query('INSERT INTO members SET name = ?, id = ?, guild_id = ?',
+                [this.name, this.id, this.guildId],
                 (error, result) => {
                     if (error) {
                         reject(error);
@@ -78,11 +67,11 @@ class Member extends Resource {
         });
     }
 
-    updateMembersTable() {
+    update() {
         return new Promise((resolve, reject) => {
             const connection = new MySQLCreateConnection(database);
-            connection.query('UPDATE members SET username = ? WHERE id = ?',
-                [this.name, this.databaseId],
+            connection.query('UPDATE members SET name = ? WHERE id = ?',
+                [this.name, this.id],
                 (error, result) => {
                     if (error) {
                         reject(error);
@@ -95,28 +84,11 @@ class Member extends Resource {
         });
     }
 
-    selectMembersToGuildsTable() {
+    remove() {
         return new Promise((resolve, reject) => {
             const connection = new MySQLCreateConnection(database);
-            connection.query('SELECT id FROM guilds_to_members WHERE member_id = ? AND guild_id = ?',
-                [this.databaseId, this.guildId],
-                (error, results) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(results);
-                    }
-
-                    connection.destroy();
-                });
-        });
-    }
-
-    insertMembersToGuildsTable() {
-        return new Promise((resolve, reject) => {
-            const connection = new MySQLCreateConnection(database);
-            connection.query('INSERT INTO guilds_to_members SET member_id = ?, guild_id = ?',
-                [this.databaseId, this.guildId],
+            connection.query('DELETE FROM members WHERE id = ?',
+                [this.id],
                 (error, result) => {
                     if (error) {
                         reject(error);
