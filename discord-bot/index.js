@@ -2,11 +2,11 @@ const DiscordJS = require('discord.js');
 const lodashGet = require('lodash/get');
 const MySQL = require('mysql');
 
-const Guild = require('./resources/guild.class');
-const Channel = require('./resources/channel.class');
-const Member = require('./resources/member.class');
-const Message = require('./resources/message.class');
-const ResourceCollection = require('./resources/resource-collection.class');
+const Guild = require('../resources/guild.class');
+const Channel = require('../resources/channel.class');
+const Member = require('../resources/member.class');
+const Message = require('../resources/message.class');
+const ResourceCollection = require('../resources/resource-collection.class');
 const Utils = require('./utilites.class');
 const discord = require('../discord');
 const database = require('../database');

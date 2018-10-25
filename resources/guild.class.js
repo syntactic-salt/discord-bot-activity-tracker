@@ -1,5 +1,5 @@
 const MySQL = require('mysql');
-const database = require('../../database');
+const database = require('../database');
 const Resource = require('./resource.class');
 
 const MySQLCreateConnection = MySQL.createConnection;

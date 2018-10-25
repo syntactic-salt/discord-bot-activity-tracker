@@ -2,10 +2,10 @@
   "name": "discord-bot-activity-tracker",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "discord-bot/index.js",
   "scripts": {
-    "lint": "eslint app/",
-    "start": "node ./app/index.js",
+    "lint": "eslint discord-bot/ resources/",
+    "start": "node ./discord-bot/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
