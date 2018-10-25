@@ -1,2 +1,4 @@
-auth.json
+database.json
+discord.json
 .idea/
+node_modules/
